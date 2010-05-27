@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, AndRedMenuActivity!</string>
+    <string name="app_name">AndRedMenu</string>
+    
+    <string name="commons_name_short_carrillo">Carrillo</string>
+<string name="commons_name_short_dlg">DLG</string>
+<string name="commons_name_short_ortega">Ortega</string>
+<string name="commons_name_short_portola">Portola</string>
+<string name="commons_name_carrillo">Carrillo Commons</string>
+<string name="commons_name_dlg">De La Guerra Commons</string>
+<string name="commons_name_ortega">Ortega Commons</string>
+<string name="commons_name_portola">Portola Commons</string>
+<string name="combined_two_weeks_menus_gz_url">http://web.me.com/jomanscool2/outfiles/CombinedNextTwoWeeks.xml.gz</string>
+<string name="local_file_gz">CombinedNextTwoWeeks.xml.gz</string>
+<string name="local_file_xml">CombinedNextTwoWeeks.xml</string>
+<string name="local_file_serialized_zipped">serializedMenus.sz.gz</string>
+<string name="local_file_serialized">serializedMenus.sz</string>
+<string name="serialized_menus_remote">http://web.me.com/jomanscool2/outfiles/serializedMenus.sz.gz</string>
+</resources>
