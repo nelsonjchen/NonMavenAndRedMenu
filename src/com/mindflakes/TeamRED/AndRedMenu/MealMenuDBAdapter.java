@@ -190,6 +190,7 @@ public class MealMenuDBAdapter {
             	initialValues.put(KEY_FOODITEM_NAME, food.getName());
             	initialValues.put(KEY_FOODITEM_FOOD_TYPE, (food.isVegetarian()?1:0)+(food.isVegan()?1:0));
             	initialValues.put(KEY_FOODITEM_VENUEROWID, venueID);
+            	mDb.insert(FOOD_DATABASE_TABLE, null, initialValues);
         	}
         }
         return menuID;
@@ -263,11 +264,10 @@ public class MealMenuDBAdapter {
     	}
     	Cursor mCursor=null;
     	try{
-    	mCursor =  mDb.query(MENU_DATABASE_TABLE, null, null, null, null, null, null);
-//    		mDb.query(true, MENU_DATABASE_TABLE, new String[] {
-//                KEY_MEALMENU_NAME, KEY_MEALMENU_MEALNAME, KEY_MEALMENU_START, KEY_MEALMENU_END,
-//                KEY_MEALMENU_MOD}, KEY_MEALMENU_NAME+"=\'"+commonName+"\' AND "+KEY_MEALMENU_END+">="+end.longValue(), null,
-//                null, null,KEY_MEALMENU_START, "1"); 
+    	mCursor= mDb.query(true, MENU_DATABASE_TABLE, new String[] {KEY_ROWID,
+                KEY_MEALMENU_NAME, KEY_MEALMENU_MEALNAME, KEY_MEALMENU_START, KEY_MEALMENU_END,
+                KEY_MEALMENU_MOD}, KEY_MEALMENU_NAME+"=\'"+commonName+"\' AND "+KEY_MEALMENU_END+">="+end.longValue(), null,
+                null, null,KEY_MEALMENU_START, "1"); 
     	}catch(Exception e){
     		String type = e.getClass().toString();
     		System.out.println(type);
