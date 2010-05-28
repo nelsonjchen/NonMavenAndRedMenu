@@ -6,11 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Scanner;
 
 import org.joda.time.DateTime;
-import org.joda.time.Interval;
 
 import android.app.TabActivity;
 import android.content.res.Resources.NotFoundException;
@@ -23,30 +20,44 @@ import android.widget.TextView;
 
 import com.mindflakes.TeamRED.MenuXML.Reader;
 import com.mindflakes.TeamRED.menuClasses.MealMenu;
-import com.mindflakes.TeamRED.menuUtils.MealMenuSearchQuery;
 
 public class QuickViewActivity extends TabActivity {
 	private TabHost mTabHost;
-	private ArrayList<MealMenu> mMenus;
+	private MealMenuDBAdapter  mDbAdapter;
+//	private NotesDbAdapter mDbAdapter;
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
             setContentView(R.layout.quick_view);
+            String type = "Passed";
             mTabHost = getTabHost();
-            readMenus();
+
+            try{
+            	mDbAdapter = new MealMenuDBAdapter(this);
+            	mDbAdapter.open();
+            } catch(Exception e){
+            	type = e.getClass().toString();
+            }
+//            readMenus();
             TextView current = (TextView) findViewById(R.id.quickview1);
+            current.setText(type);
+            
+            MealMenu toSet = getMealMenu(1);
             current.setMovementMethod(new ScrollingMovementMethod());
-            current.setText((mMenus!=null)?getMealMenu(1).toString():"null");
-            current=(TextView) findViewById(R.id.quickview2);
-            current.setMovementMethod(new ScrollingMovementMethod());
-            current.setText((mMenus!=null)?getMealMenu(2).toString():"null");
-            current=(TextView) findViewById(R.id.quickview3);
-            current.setMovementMethod(new ScrollingMovementMethod());
-            current.setText((mMenus!=null)?getMealMenu(3).toString():"null");
-            current=(TextView) findViewById(R.id.quickview4);
-            current.setMovementMethod(new ScrollingMovementMethod());
-            current.setText((mMenus!=null)?getMealMenu(4).toString():"null");
+            current.setText((toSet!=null)?toSet.toString():"null");
+//            current=(TextView) findViewById(R.id.quickview2);
+//            toSet = getMealMenu(2);
+//            current.setMovementMethod(new ScrollingMovementMethod());
+//            current.setText((toSet!=null)?toSet.toString():"null");
+//            current=(TextView) findViewById(R.id.quickview3);
+//            toSet = getMealMenu(3);
+//            current.setMovementMethod(new ScrollingMovementMethod());
+//            current.setText((toSet!=null)?toSet.toString():"null");
+//            current=(TextView) findViewById(R.id.quickview4);
+//            toSet = getMealMenu(4);
+//            current.setMovementMethod(new ScrollingMovementMethod());
+//            current.setText((toSet!=null)?toSet.toString():"null");
             mTabHost.addTab(mTabHost.newTabSpec("tab_test1").setIndicator(getResources().getString(R.string.commons_name_short_carrillo)).setContent(R.id.quickview1));
             mTabHost.addTab(mTabHost.newTabSpec("tab_test2").setIndicator(getResources().getString(R.string.commons_name_short_dlg)).setContent(R.id.quickview2));
             mTabHost.addTab(mTabHost.newTabSpec("tab_test3").setIndicator(getResources().getString(R.string.commons_name_short_ortega)).setContent(R.id.quickview3));
@@ -63,30 +74,28 @@ public class QuickViewActivity extends TabActivity {
     }
 
     protected void readMenus(){
-    	if(mMenus==null){
     	try{
 			loadMenus();
     	}catch(FileNotFoundException e){
     		updateMenus();
     	}
-    	}
     }
     
     private void loadMenus() throws FileNotFoundException, NotFoundException{
-		mMenus = Reader.readSerialized(openFileInput(getResources().getString(R.string.local_file_serialized)));
+    	mDbAdapter.clear();
+		mDbAdapter.addMenus(Reader.readSerialized(openFileInput(getResources().getString(R.string.local_file_serialized))));
     }
     
     protected MealMenu getMealMenu(int mode){
-    	MealMenuSearchQuery query = new MealMenuSearchQuery(mMenus).findEndingAt(new Interval(new DateTime(), new DateTime().plusDays(1)));
     	switch(mode){
     	case 1:
-        	return query.findCommons("Carrillo").sortByEndTime(true).returnResults().get(0);
+        	return mDbAdapter.selectFirstMeal("Carrillo", new Long(new DateTime().getMillis()));
     	case 2:
-    		return query.findCommons("De La Guerra").sortByEndTime(true).returnResults().get(0);
+        	return mDbAdapter.selectFirstMeal("De La Guerra", new Long(new DateTime().getMillis()));
     	case 3:
-    		return query.findCommons("Ortega").sortByEndTime(true).returnResults().get(0);
+        	return mDbAdapter.selectFirstMeal("Ortega", new Long(new DateTime().getMillis()));
     	case 4:
-    		return query.findCommons("Portola").sortByEndTime(true).returnResults().get(0);
+        	return mDbAdapter.selectFirstMeal("Portola", new Long(new DateTime().getMillis()));
     	}
     	return null;
     }

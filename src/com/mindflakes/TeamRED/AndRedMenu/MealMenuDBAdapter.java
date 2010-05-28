@@ -16,6 +16,8 @@
 
 package com.mindflakes.TeamRED.AndRedMenu;
 
+import java.util.ArrayList;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -23,8 +25,10 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-import com.mindflakes.TeamRED.menuClasses.*;
-import java.util.ArrayList;
+
+import com.mindflakes.TeamRED.menuClasses.FoodItem;
+import com.mindflakes.TeamRED.menuClasses.MealMenu;
+import com.mindflakes.TeamRED.menuClasses.Venue;
 
 /**
  * Simple notes database access helper class. Defines the basic CRUD operations
@@ -71,13 +75,18 @@ public class MealMenuDBAdapter {
     /**
      * Database creation sql statement
      */
+    
+    private static final String DATABASE_CREATE =
+        "create table notes (_id integer primary key autoincrement, "
+        + "title text not null, body text not null);";
+    
     private static final String MENU_DATABASE_CREATE =
         "create table "+MENU_DATABASE_TABLE+" ("+KEY_ROWID+" integer primary key autoincrement, "
+        + KEY_MEALMENU_START+" integer, "
+        + KEY_MEALMENU_END+" integer, "
+        + KEY_MEALMENU_MOD+" integer, 	"
         + KEY_MEALMENU_NAME + " text not null, "
-        + KEY_MEALMENU_NAME+" text not null, "
-        + KEY_MEALMENU_START+" integer not null, "
-        + KEY_MEALMENU_END+" integer not null, "
-        + KEY_MEALMENU_MOD+" integer not null);";
+        + KEY_MEALMENU_MEALNAME+" text not null);";
 
     private static final String VENUE_DATABASE_CREATE =
         "create table "+VENUE_DATABASE_TABLE+" ("+KEY_ROWID+" integer primary key autoincrement, "
@@ -99,6 +108,7 @@ public class MealMenuDBAdapter {
         @Override
         public void onCreate(SQLiteDatabase db) {
 
+//        	db.execSQL(DATABASE_CREATE);
             db.execSQL(MENU_DATABASE_CREATE);
             db.execSQL(VENUE_DATABASE_CREATE);
             db.execSQL(FOOD_DATABASE_CREATE);
@@ -144,6 +154,12 @@ public class MealMenuDBAdapter {
     public void close() {
         mDbHelper.close();
     }
+    
+    public void clear(){
+    	mDb.delete(MENU_DATABASE_TABLE, null, null);
+    	mDb.delete(FOOD_DATABASE_TABLE, null, null);
+    	mDb.delete(VENUE_DATABASE_TABLE, null, null);
+    }
 
 
     /**
@@ -164,13 +180,27 @@ public class MealMenuDBAdapter {
         initialValues.put(KEY_MEALMENU_MOD, menu.getModDate().getMillis());
 
         long menuID =  mDb.insert(MENU_DATABASE_TABLE, null, initialValues);
-        for(Venue ven:menu.getVenues()){
-        initialValues = new ContentValues();
-        initialValues.put(KEY_VENUE_NAME,ven.getName());
-        initialValues.put(KEY_VENUE_MENUROWID, menuID);
-        long venueID=mDb.insert(VENUE_DATABASE_TABLE, null, initialValues);
-        for(FoodItem:)
+        for(Venue ven : menu.getVenues()){
+        	initialValues = new ContentValues();
+        	initialValues.put(KEY_VENUE_NAME,ven.getName());
+        	initialValues.put(KEY_VENUE_MENUROWID, menuID);
+        	long venueID=mDb.insert(VENUE_DATABASE_TABLE, null, initialValues);
+        	for(FoodItem food:ven.getFoodItems()){
+            	initialValues = new ContentValues();
+            	initialValues.put(KEY_FOODITEM_NAME, food.getName());
+            	initialValues.put(KEY_FOODITEM_FOOD_TYPE, (food.isVegetarian()?1:0)+(food.isVegan()?1:0));
+            	initialValues.put(KEY_FOODITEM_VENUEROWID, venueID);
+        	}
         }
+        return menuID;
+    }
+    
+    public long[] addMenus(ArrayList<MealMenu> menu){
+    	long[] result = new long[menu.size()];
+    	for(int i = 0; i<menu.size();i++){
+    		result[i]=addMenu(menu.get(i));
+    	}
+    	return result;
     }
 
     /**
@@ -179,22 +209,78 @@ public class MealMenuDBAdapter {
      * @param rowId id of note to delete
      * @return true if deleted, false otherwise
      */
-    public boolean deleteNote(long rowId) {
-
-        return mDb.delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
+    public boolean deleteMenu(long rowId) {
+    	boolean result = mDb.delete(MENU_DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
+    	if(result){
+    		Cursor venCursor = mDb.query(true, VENUE_DATABASE_TABLE, new String[]{
+    				KEY_ROWID}, KEY_VENUE_MENUROWID+"="+rowId,
+    				null,null,null,null,null);
+    		if (venCursor != null) {
+    			boolean hasMoreVens =venCursor.moveToFirst();
+    			while(hasMoreVens){
+    				long venRowId = venCursor.getLong(venCursor.getColumnIndexOrThrow(KEY_ROWID));
+    				mDb.delete(FOOD_DATABASE_TABLE, KEY_FOODITEM_VENUEROWID + "=" + venRowId, null);
+    				hasMoreVens = venCursor.moveToNext();
+    			}
+    		}
+    		mDb.delete(VENUE_DATABASE_TABLE, KEY_VENUE_MENUROWID+"="+rowId,null);
+    	}
+    	return result;
     }
-
-    /**
+    	/**
      * Return a Cursor over the list of all notes in the database
      * 
      * @return Cursor over all notes
      */
-    public Cursor fetchAllNotes() {
+    public Cursor fetchAllMenuCursor() {
 
-        return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TITLE,
-                KEY_BODY}, null, null, null, null, null);
+        return mDb.query(MENU_DATABASE_TABLE, new String[] {KEY_ROWID, KEY_MEALMENU_NAME,
+        		KEY_MEALMENU_START,KEY_MEALMENU_MEALNAME},
+        		null, null, null, null, null);
     }
 
+    
+    /**
+     * Searches for Meals that end Between the dates given, in the Long wrapper class. Null means to not use that value.
+     * Ordered by the column name given.
+     * @param start
+     * @param stop
+     * @param orderBy
+     * @return
+     */
+    public Cursor fetchMenusEndBetween(String commonsName,Long start, Long stop, String orderBy){
+    	String selection = "";
+    	if(commonsName!=null) selection = KEY_MEALMENU_NAME+"=\'"+commonsName+"\'";
+    	if(start!=null) selection = addCondition(selection,KEY_MEALMENU_END+">="+start.longValue());
+    	if(stop!=null) selection = addCondition(selection,KEY_MEALMENU_END+"<="+stop.longValue());
+    	return mDb.query(MENU_DATABASE_TABLE, new String[] {KEY_ROWID, KEY_MEALMENU_NAME,
+    			KEY_MEALMENU_START,KEY_MEALMENU_END,KEY_MEALMENU_MOD}, (selection.equals(""))?null:selection, null,null, null, orderBy);
+    }
+    
+    public MealMenu selectFirstMeal(String commonName,Long end){
+    	if(commonName==null||end==null){
+    		throw new NullPointerException("Parameters to selectFirstMeal cannot be null");
+    	}
+    	Cursor mCursor=null;
+    	try{
+    	mCursor =  mDb.query(MENU_DATABASE_TABLE, null, null, null, null, null, null);
+//    		mDb.query(true, MENU_DATABASE_TABLE, new String[] {
+//                KEY_MEALMENU_NAME, KEY_MEALMENU_MEALNAME, KEY_MEALMENU_START, KEY_MEALMENU_END,
+//                KEY_MEALMENU_MOD}, KEY_MEALMENU_NAME+"=\'"+commonName+"\' AND "+KEY_MEALMENU_END+">="+end.longValue(), null,
+//                null, null,KEY_MEALMENU_START, "1"); 
+    	}catch(Exception e){
+    		String type = e.getClass().toString();
+    		System.out.println(type);
+    	}
+    	if(mCursor!=null && mCursor.moveToFirst()){
+    		return returnNextFromCursor(mCursor,mCursor.getLong((mCursor.getColumnIndexOrThrow(KEY_ROWID))));
+    	}
+    	return null;
+    }
+    
+    private static String addCondition(String start, String add){
+    	return ((start!=null&&!start.equals(""))?start+" AND ":"")+add;
+    }
     /**
      * Return a Cursor positioned at the note that matches the given rowId
      * 
@@ -202,35 +288,48 @@ public class MealMenuDBAdapter {
      * @return Cursor positioned to matching note, if found
      * @throws SQLException if note could not be found/retrieved
      */
-    public Cursor fetchNote(long rowId) throws SQLException {
-
+    public MealMenu fetchMenu(long rowId) throws SQLException {
         Cursor mCursor =
 
-            mDb.query(true, DATABASE_TABLE, new String[] {KEY_ROWID,
-                    KEY_TITLE, KEY_BODY}, KEY_ROWID + "=" + rowId, null,
+            mDb.query(true, MENU_DATABASE_TABLE, new String[] {
+                    KEY_MEALMENU_NAME, KEY_MEALMENU_MEALNAME, KEY_MEALMENU_START, KEY_MEALMENU_END,
+                    KEY_MEALMENU_MOD}, KEY_ROWID + "=" + rowId, null,
                     null, null, null, null);
-        if (mCursor != null) {
-            mCursor.moveToFirst();
-        }
-        return mCursor;
-
+        if (mCursor != null && mCursor.moveToFirst()) {
+        	return returnNextFromCursor(mCursor,rowId);
+        } else{
+        	return null;
+        }        
     }
-
-    /**
-     * Update the note using the details provided. The note to be updated is
-     * specified using the rowId, and it is altered to use the title and body
-     * values passed in
-     * 
-     * @param rowId id of note to update
-     * @param title value to set note title to
-     * @param body value to set note body to
-     * @return true if the note was successfully updated, false otherwise
-     */
-    public boolean updateNote(long rowId, String title, String body) {
-        ContentValues args = new ContentValues();
-        args.put(KEY_TITLE, title);
-        args.put(KEY_BODY, body);
-
-        return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
+    
+    private MealMenu returnNextFromCursor(Cursor mCursor, long rowId){
+        ArrayList<Venue> vens = new ArrayList<Venue>();
+        Cursor mVenCursor = mDb.query(true, VENUE_DATABASE_TABLE, new String[]{
+        		KEY_ROWID,KEY_VENUE_NAME}, KEY_VENUE_MENUROWID+"="+rowId,
+        		null,null,null,null,null);
+        boolean hasMoreVens = mVenCursor.moveToFirst();
+        while(hasMoreVens){
+        	ArrayList<FoodItem> foods = new ArrayList<FoodItem>();
+        	long venRowId = mVenCursor.getLong(mVenCursor.getColumnIndexOrThrow(KEY_ROWID));
+        	Cursor mFoodCursor = mDb.query(true, FOOD_DATABASE_TABLE, new String[]{
+            		KEY_FOODITEM_NAME,KEY_FOODITEM_FOOD_TYPE}, KEY_FOODITEM_VENUEROWID+"="+venRowId,
+            		null,null,null,null,null);
+        	boolean hasMoreFoods = mFoodCursor.moveToFirst();
+        	while(hasMoreFoods){
+        		short type = mFoodCursor.getShort(mFoodCursor.getColumnIndex(KEY_FOODITEM_FOOD_TYPE));
+        		foods.add(new FoodItem(mFoodCursor.getString(mFoodCursor.getColumnIndexOrThrow(KEY_FOODITEM_NAME)),
+        				(type==2)?true:false,(type>0 && type <=2)?true:false));
+        		hasMoreFoods = mFoodCursor.moveToNext();
+        	}
+        	vens.add(new Venue(mVenCursor.getString(mVenCursor.getColumnIndexOrThrow(KEY_VENUE_NAME)), foods));
+        	hasMoreVens = mVenCursor.moveToNext();
+        }
+        return new MealMenu(
+        		mCursor.getString(mCursor.getColumnIndexOrThrow(KEY_MEALMENU_NAME)),
+        		mCursor.getLong(mCursor.getColumnIndexOrThrow(KEY_MEALMENU_START)),
+        		mCursor.getLong(mCursor.getColumnIndexOrThrow(KEY_MEALMENU_END)),
+        		mCursor.getLong(mCursor.getColumnIndexOrThrow(KEY_MEALMENU_MOD)),
+        		vens,
+        		mCursor.getString(mCursor.getColumnIndexOrThrow(KEY_MEALMENU_MEALNAME)));
     }
 }
