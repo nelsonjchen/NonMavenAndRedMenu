@@ -55,18 +55,18 @@ public class QuickViewActivity extends TabActivity {
         MealMenu toSet = getMealMenu(1);
         current.setMovementMethod(new ScrollingMovementMethod());
         current.setText((toSet!=null)?toSet.toString():"null");
-//        current=(TextView) findViewById(R.id.quickview2);
-//        toSet = getMealMenu(2);
-//        current.setMovementMethod(new ScrollingMovementMethod());
-//        current.setText((toSet!=null)?toSet.toString():"null");
-//        current=(TextView) findViewById(R.id.quickview3);
-//        toSet = getMealMenu(3);
-//        current.setMovementMethod(new ScrollingMovementMethod());
-//        current.setText((toSet!=null)?toSet.toString():"null");
-//        current=(TextView) findViewById(R.id.quickview4);
-//        toSet = getMealMenu(4);
-//        current.setMovementMethod(new ScrollingMovementMethod());
-//        current.setText((toSet!=null)?toSet.toString():"null");
+        current=(TextView) findViewById(R.id.quickview2);
+        toSet = getMealMenu(2);
+        current.setMovementMethod(new ScrollingMovementMethod());
+        current.setText((toSet!=null)?toSet.toString():"null");
+        current=(TextView) findViewById(R.id.quickview3);
+        toSet = getMealMenu(3);
+        current.setMovementMethod(new ScrollingMovementMethod());
+        current.setText((toSet!=null)?toSet.toString():"null");
+        current=(TextView) findViewById(R.id.quickview4);
+        toSet = getMealMenu(4);
+        current.setMovementMethod(new ScrollingMovementMethod());
+        current.setText((toSet!=null)?toSet.toString():"null");
     }
     
     /* Creates the menu items */
