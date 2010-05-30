@@ -18,6 +18,10 @@ package com.mindflakes.TeamRED.AndRedMenu;
 
 import java.util.ArrayList;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -41,12 +45,15 @@ import com.mindflakes.TeamRED.menuClasses.Venue;
  * recommended).
  */
 public class MealMenuDBAdapter {
+	
+	private static final DateTimeFormatter dtf =  DateTimeFormat.forPattern("'on' EEE, MMM dd");
 
     public static final String KEY_MEALMENU_NAME = "name";
     public static final String KEY_MEALMENU_MEALNAME = "mealname";
     public static final String KEY_MEALMENU_START = "start";
     public static final String KEY_MEALMENU_END = "end";
     public static final String KEY_MEALMENU_MOD = "mod";
+    public static final String KEY_MEALMENU_STARTSTRING = "startstring";
     public static final String KEY_ROWID = "_id";
     
     public static final String KEY_VENUE_NAME = "name";
@@ -86,6 +93,7 @@ public class MealMenuDBAdapter {
         + KEY_MEALMENU_END+" integer, "
         + KEY_MEALMENU_MOD+" integer, 	"
         + KEY_MEALMENU_NAME + " text not null, "
+        + KEY_MEALMENU_STARTSTRING + " text not null, "
         + KEY_MEALMENU_MEALNAME+" text not null);";
 
     private static final String VENUE_DATABASE_CREATE =
@@ -178,6 +186,7 @@ public class MealMenuDBAdapter {
         initialValues.put(KEY_MEALMENU_START, menu.getMealInterval().getStartMillis());
         initialValues.put(KEY_MEALMENU_END, menu.getMealInterval().getEndMillis());
         initialValues.put(KEY_MEALMENU_MOD, menu.getModDate().getMillis());
+        initialValues.put(KEY_MEALMENU_STARTSTRING, dtf.print(menu.getMealInterval().getStart()));
 
         long menuID =  mDb.insert(MENU_DATABASE_TABLE, null, initialValues);
         for(Venue ven : menu.getVenues()){
@@ -254,8 +263,14 @@ public class MealMenuDBAdapter {
     	if(commonsName!=null) selection = KEY_MEALMENU_NAME+"=\'"+commonsName+"\'";
     	if(start!=null) selection = addCondition(selection,KEY_MEALMENU_END+">="+start.longValue());
     	if(stop!=null) selection = addCondition(selection,KEY_MEALMENU_END+"<="+stop.longValue());
-    	return mDb.query(MENU_DATABASE_TABLE, new String[] {KEY_ROWID, KEY_MEALMENU_NAME,
+    	return mDb.query(MENU_DATABASE_TABLE, new String[] {KEY_ROWID, KEY_MEALMENU_NAME, KEY_MEALMENU_MEALNAME,
     			KEY_MEALMENU_START,KEY_MEALMENU_END,KEY_MEALMENU_MOD}, (selection.equals(""))?null:selection, null,null, null, orderBy);
+    }
+    
+    public Cursor fetchMenusForMainList(String commonsName){
+    	if(commonsName==null) return null;
+    	return mDb.query(MENU_DATABASE_TABLE, new String[] {KEY_ROWID, KEY_MEALMENU_MEALNAME,
+    			KEY_MEALMENU_STARTSTRING}, KEY_MEALMENU_NAME+"=\'"+commonsName+"\' AND "+KEY_MEALMENU_END+">="+(new DateTime().getMillis()), null,null, null, KEY_MEALMENU_START);
     }
     
     public MealMenu selectFirstMeal(String commonName,Long end){

@@ -10,14 +10,17 @@ import java.util.ArrayList;
 
 import org.joda.time.DateTime;
 
+import android.app.ListActivity;
 import android.app.TabActivity;
 import android.content.Intent;
 import android.content.res.Resources.NotFoundException;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ArrayAdapter;
+import android.view.View;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TabHost;
 
 import com.mindflakes.TeamRED.MenuXML.Reader;
@@ -25,7 +28,9 @@ import com.mindflakes.TeamRED.menuClasses.FoodItem;
 import com.mindflakes.TeamRED.menuClasses.MealMenu;
 import com.mindflakes.TeamRED.menuClasses.Venue;
 
-public class QuickViewActivity extends TabActivity {
+public class MainViewActivity extends TabActivity {
+
+
 	private TabHost mTabHost;
 	private MealMenuDBAdapter  mDbAdapter;
 //	private NotesDbAdapter mDbAdapter;
@@ -33,7 +38,18 @@ public class QuickViewActivity extends TabActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-            setContentView(R.layout.quick_view);
+            setContentView(R.layout.main);
+//            class MainListActivity extends ListActivity{
+//                
+//                @Override
+//                protected void onListItemClick(ListView l, View v, int position, long id) {
+//                    super.onListItemClick(l, v, position, id);
+//                    Intent i = new Intent(this, MenuViewActivity.class);
+//                    i.putExtra(MealMenuDBAdapter.KEY_ROWID, id);
+//                    startActivity(i);
+//                }
+//            }
+//            
             String type = "Passed";
             mTabHost = getTabHost();
 
@@ -43,19 +59,18 @@ public class QuickViewActivity extends TabActivity {
             } catch(Exception e){
             	type = e.getClass().toString();
             }
-//            readMenus();
 
-            
-            mTabHost.addTab(mTabHost.newTabSpec("tab_test1").setIndicator(getResources().getString(R.string.commons_name_short_carrillo)).setContent(R.id.quicklist1));
-            mTabHost.addTab(mTabHost.newTabSpec("tab_test2").setIndicator(getResources().getString(R.string.commons_name_short_dlg)).setContent(R.id.quicklist2));
-            mTabHost.addTab(mTabHost.newTabSpec("tab_test3").setIndicator(getResources().getString(R.string.commons_name_short_ortega)).setContent(R.id.quicklist3));
-            mTabHost.addTab(mTabHost.newTabSpec("tab_test4").setIndicator(getResources().getString(R.string.commons_name_short_portola)).setContent(R.id.quicklist4));
+            mTabHost.addTab(mTabHost.newTabSpec("tab_test1").setIndicator(getResources().getString(R.string.commons_name_short_carrillo)).setContent(R.id.mainlist1));
+            mTabHost.addTab(mTabHost.newTabSpec("tab_test2").setIndicator(getResources().getString(R.string.commons_name_short_dlg)).setContent(R.id.mainlist2));
+            mTabHost.addTab(mTabHost.newTabSpec("tab_test3").setIndicator(getResources().getString(R.string.commons_name_short_ortega)).setContent(R.id.mainlist3));
+            mTabHost.addTab(mTabHost.newTabSpec("tab_test4").setIndicator(getResources().getString(R.string.commons_name_short_portola)).setContent(R.id.mainlist4));
             updateViews();
             mTabHost.setCurrentTab(0);
+//            ListActivity tmp = new ListActivity((ListView));
+//            this.get
     }
     
     private ArrayList<String> toArrayHelper(MealMenu menu){
-    	if(menu==null) return new ArrayList<String>();
     	ArrayList<String> arr = new ArrayList<String>();
     	for(Venue ven:menu.getVenues()){
     		arr.add(ven.getName());
@@ -67,29 +82,42 @@ public class QuickViewActivity extends TabActivity {
     }
     
     private void updateViews(){
-    	ListView view = (ListView)findViewById(R.id.quicklist1);
-        ArrayList<String> toSet = toArrayHelper(getMealMenu(1));
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,R.layout.quick_row,toSet);
-        view.setAdapter(adapter);
-        view = (ListView)findViewById(R.id.quicklist2);
-        toSet = toArrayHelper(getMealMenu(2));
-        adapter = new ArrayAdapter<String>(this,R.layout.quick_row,toSet);
-        view.setAdapter(adapter);
-        view = (ListView)findViewById(R.id.quicklist3);
-        toSet = toArrayHelper(getMealMenu(3));
-        adapter = new ArrayAdapter<String>(this,R.layout.quick_row,toSet);
-        view.setAdapter(adapter);
-        view = (ListView)findViewById(R.id.quicklist4);
-        toSet = toArrayHelper(getMealMenu(4));
-        adapter = new ArrayAdapter<String>(this,R.layout.quick_row,toSet);
-        view.setAdapter(adapter);
+    	ListView view = (ListView)findViewById(R.id.mainlist1);
+    	Cursor c = mDbAdapter.fetchMenusForMainList("Carrillo");
+    	startManagingCursor(c);
+    	String[] from = new String[]{
+    			MealMenuDBAdapter.KEY_MEALMENU_MEALNAME,MealMenuDBAdapter.KEY_MEALMENU_STARTSTRING
+    	};
+    	int[] to = new int[]{
+    			R.id.maintext1,R.id.maintext2};
+    	SimpleCursorAdapter menus = new SimpleCursorAdapter(this,R.layout.main_row,c,from,to);
+        view.setAdapter(menus);
+        view = (ListView)findViewById(R.id.mainlist2);
+        c = mDbAdapter.fetchMenusForMainList("De La Guerra");
+        menus = new SimpleCursorAdapter(this,R.layout.main_row,c,from,to);
+        view.setAdapter(menus);
+        view = (ListView)findViewById(R.id.mainlist3);
+        c = mDbAdapter.fetchMenusForMainList("Ortega");
+        menus = new SimpleCursorAdapter(this,R.layout.main_row,c,from,to);
+        view.setAdapter(menus);
+        view = (ListView)findViewById(R.id.mainlist4);
+        c = mDbAdapter.fetchMenusForMainList("Portola");
+        menus = new SimpleCursorAdapter(this,R.layout.main_row,c,from,to);
+        view.setAdapter(menus);
     }
+//    
+//    
+//    protected void onListItemClick(ListView l, View v, int position, long id) {
+//        super.onListItemClick(l, v, position, id);
+//        Intent i = new Intent(this, NoteEdit.class);
+//        i.putExtra(NotesDbAdapter.KEY_ROWID, id);
+//        startActivityForResult(i, ACTIVITY_EDIT);
+//    }
     
     /* Creates the menu items */
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, 1234, 0, "Clear SQL");
         menu.add(0, 1235, 0, "Update Menus");
-        menu.add(0, 1236, 0, "Main View");
         return true;
     }
 
@@ -130,9 +158,6 @@ public class QuickViewActivity extends TabActivity {
         	updateMenuFiles();
         	updateViews();
             return true;
-        case 1236:
-            Intent i = new Intent(this, MainViewActivity.class);
-            startActivity(i);
         }
         return false;
     }
@@ -162,22 +187,5 @@ public class QuickViewActivity extends TabActivity {
 			e.printStackTrace();
 		}
     }
-//    
-//    public void switchToListView() {
-//      super.onCreate(savedInstanceState);
-//
-//      setListAdapter(new ArrayAdapter<String>(this, R.layout.list_item, COUNTRIES));
-//
-//      ListView lv = getListView();
-//      lv.setTextFilterEnabled(true);
-//
-//      lv.setOnItemClickListener(new OnItemClickListener() {
-//        public void onItemClick(AdapterView<?> parent, View view,
-//            int position, long id) {
-//          // When clicked, show a toast with the TextView text
-//          Toast.makeText(getApplicationContext(), ((TextView) view).getText(),
-//              Toast.LENGTH_SHORT).show();
-//        }
-//      });
-//    }
+
 }

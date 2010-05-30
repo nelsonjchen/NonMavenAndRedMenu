@@ -15,30 +15,18 @@
             android:id="@android:id/tabcontent"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent">
-            <TextView 
-                android:id="@+id/quickview1"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:scrollbars="vertical" 
-                android:text="this is a tab" />
-            <TextView 
-                android:id="@+id/quickview2"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:scrollbars="vertical"  
-                android:text="this is another tab" />
-            <TextView 
-                android:id="@+id/quickview3"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent" 
-                android:scrollbars="vertical"
-                android:text="this is a third tab" />
-                            <TextView 
-                android:id="@+id/quickview4"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent" 
-                android:scrollbars="vertical"
-                android:text="this is a third tab" />
+    			<ListView android:id="@+id/quicklist1"
+          			android:layout_width="wrap_content"
+        			android:layout_height="wrap_content"/>
+    			<ListView android:id="@+id/quicklist2"
+          			android:layout_width="wrap_content"
+        			android:layout_height="wrap_content"/>
+    			<ListView android:id="@+id/quicklist3"
+          			android:layout_width="wrap_content"
+        			android:layout_height="wrap_content"/>
+    			<ListView android:id="@+id/quicklist4"
+          			android:layout_width="wrap_content"
+        			android:layout_height="wrap_content"/>
         </FrameLayout>
     </LinearLayout>
 </TabHost>
