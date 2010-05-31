@@ -1,5 +1,6 @@
 package com.mindflakes.TeamRED.AndRedMenu;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -131,7 +132,7 @@ public class MainViewActivity extends TabActivity {
     
     private void loadMenusToSQL() throws FileNotFoundException, NotFoundException{
     	mDbAdapter.clear();
-		mDbAdapter.addMenus(Reader.readSerialized(openFileInput(getResources().getString(R.string.local_file_serialized))));
+		mDbAdapter.addMenus(Reader.readFile(new File(getResources().getString(R.string.local_file_xml))));
     }
     
     protected MealMenu getMealMenu(int mode){
@@ -164,13 +165,13 @@ public class MainViewActivity extends TabActivity {
     
     protected void updateMenuFiles(){
 		try{
-			URL remoteFile = new URL(getResources().getString(R.string.serialized_menus_remote));
+			URL remoteFile = new URL(getResources().getString(R.string.combined_two_weeks_menus_gz_url));
 			
 		    HttpURLConnection c = (HttpURLConnection) remoteFile.openConnection();
 		    c.setRequestMethod("GET");
 		    c.setDoOutput(true);
 		    c.connect();
-		    FileOutputStream f = openFileOutput(getResources().getString(R.string.local_file_serialized_zipped),MODE_PRIVATE);
+		    FileOutputStream f = openFileOutput(getResources().getString(R.string.local_file_gz),MODE_PRIVATE);
 		    InputStream in = c.getInputStream();
 
 		    byte[] buffer = new byte[1024];
@@ -180,8 +181,8 @@ public class MainViewActivity extends TabActivity {
 		 }
 		    f.close();
 		    in.close();
-			Reader.uncompressFile(openFileInput(getResources().getString(R.string.local_file_serialized_zipped)),
-					openFileOutput(getResources().getString(R.string.local_file_serialized),MODE_PRIVATE));
+			Reader.uncompressFile(openFileInput(getResources().getString(R.string.local_file_gz)),
+					openFileOutput(getResources().getString(R.string.local_file_xml),MODE_PRIVATE));
 			loadMenusToSQL();
 		}catch(IOException e){
 			e.printStackTrace();
