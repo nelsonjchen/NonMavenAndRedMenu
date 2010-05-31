@@ -103,9 +103,13 @@ public class QuickViewActivity extends TabActivity {
     }
     
     private void loadMenusToSQL() throws FileNotFoundException, NotFoundException{
-    	mDbAdapter.clear();
-		mDbAdapter.addMenus(Reader.readIS(openFileInput((getResources().getString(R.string.local_file_xml)))));
-    }
+		mDbAdapter.clear();
+		ArrayList<MealMenu> menu = Reader.readIS(openFileInput((getResources().getString(R.string.local_file_xml))));
+		if (menu == null) {
+			throw new RuntimeException("There were no mealmenus!");
+		}
+		mDbAdapter.addMenus(menu);
+	}
     
     protected MealMenu getMealMenu(int mode){
     	switch(mode){

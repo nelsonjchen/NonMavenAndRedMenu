@@ -11,7 +11,8 @@
 <string name="commons_name_dlg">De La Guerra Commons</string>
 <string name="commons_name_ortega">Ortega Commons</string>
 <string name="commons_name_portola">Portola Commons</string>
-<string name="combined_two_weeks_menus_gz_url">http://redmenuscraper.mindflakes.com/CombinedNextTwoWeeks.xml</string>
+<string name="combined_two_weeks_menus_gz_url">http://redmenuscraper.mindflakes.com/CombinedNextTwoWeeks.xml.gz</string>
+<string name="combined_two_weeks_menus_url">http://redmenuscraper.mindflakes.com/CombinedNextTwoWeeks.xml</string>
 <string name="local_file_gz">CombinedNextTwoWeeks.xml.gz</string>
 <string name="local_file_xml">CombinedNextTwoWeeks.xml</string>
 </resources>
